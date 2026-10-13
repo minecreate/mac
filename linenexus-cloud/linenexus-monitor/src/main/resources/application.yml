@@ -1,0 +1,44 @@
+server:
+  port: 18082
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: monitor
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/linenexus_asset?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Shanghai
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        group: LINENEXUS_CLOUD
+
+linenexus:
+  mqtt:
+    enabled: true
+    broker-url: tcp://127.0.0.1:1883
+    client-id: linenexus-monitor
+    topic: linenexus/+/telemetry
+    username: ""
+    password: ""
+  tdengine:
+    # 时序库跑在 Ubuntu 虚拟机 Docker（见 tools/_ssh_tdengine_up.py）
+    jdbc-url: jdbc:TAOS-RS://192.168.3.45:6041
+    username: root
+    password: taosdata
+    database: linenexus
+    keep-days: 30
+  alarm:
+    offline-scan-ms: 30000

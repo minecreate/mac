@@ -1,0 +1,18 @@
+{
+  "server": {
+    "listenerAddress": "0.0.0.0",
+    "listenerPort": 5020,
+    "protocol": "TCP"
+  },
+  "registers": {
+    "initializeUndefinedRegisters": true,
+    "holdingRegister": {
+      "0": 100,
+      "1": 200,
+      "2": 300
+    },
+    "coils": {
+      "0": true
+    }
+  }
+}

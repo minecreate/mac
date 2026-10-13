@@ -1,0 +1,29 @@
+server:
+  port: 18081
+
+spring:
+  application:
+    name: asset
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/linenexus_asset?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Shanghai
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        group: LINENEXUS_CLOUD
+
+linenexus:
+  auth:
+    jwt-secret: "linenexus-dev-jwt-secret-change-me-32b"
+    token-ttl-hours: 12

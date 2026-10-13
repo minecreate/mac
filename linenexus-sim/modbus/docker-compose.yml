@@ -1,0 +1,9 @@
+services:
+  modbus-server:
+    image: oitc/modbus-server:latest
+    restart: unless-stopped
+    command: ["-f", "/server.json"]
+    ports:
+      - "5020:5020"
+    volumes:
+      - ./server.json:/server.json:ro

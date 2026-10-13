@@ -1,0 +1,27 @@
+http:
+  addr: ":8081"
+  web_dir: "./web"
+
+sqlite:
+  path: "./data/edge.db"
+
+# 边端网关自身身份（现场 Go 进程），不是 Spring Cloud Gateway
+edge_gateway:
+  id: "gw-local-01"
+  name: "linenexus-edge"
+  tenant_id: "tenant-dev"
+
+# 云 HTTP 入口（Spring Cloud Gateway / api-gateway），不要写某个微服务实例地址
+cloud:
+  api_base: "http://127.0.0.1:18080"
+  register_path: "/api/assets/edge-gateways/register"
+  # 实验室：云侧反向代理到本机边端 HTTP；生产应由边端主动上行，勿对公网暴露
+  management_url: "http://127.0.0.1:8081"
+  heartbeat_interval: 10s
+
+collect:
+  interval: 5s
+  offline_after: 15s
+
+log:
+  level: "info"

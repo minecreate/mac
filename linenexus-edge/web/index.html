@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>边端网关调试</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <header>
+    <strong>边端网关调试</strong>
+    <span id="gw-meta">未连接</span>
+    <button type="button" id="btn-refresh">刷新</button>
+  </header>
+
+  <div class="shell">
+    <nav class="side" aria-label="模块">
+      <button type="button" data-page="devices" class="on">设备</button>
+      <button type="button" data-page="uplink">上层通信</button>
+    </nav>
+
+    <div class="content">
+      <div id="page-devices">
+        <section class="panel">
+          <h1>设备</h1>
+          <p class="hint">点一台设备，查看它的可读写点和当前状态。南向 MQTT 设备也在这里加。</p>
+          <table>
+            <thead>
+              <tr>
+                <th>名称</th>
+                <th>通信协议</th>
+                <th>地址</th>
+                <th>在线</th>
+                <th>心跳</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="device-body"></tbody>
+          </table>
+          <form id="device-form" class="inline">
+            <select name="protocol" id="device-protocol">
+              <option value="opcua">OPC UA</option>
+              <option value="modbus">Modbus</option>
+              <option value="mqtt">MQTT</option>
+            </select>
+            <input name="address" id="device-address" required placeholder="地址，如 opc.tcp://192.168.3.37:4840" />
+            <input name="username" id="device-username" placeholder="用户名" />
+            <input name="password" id="device-password" type="password" placeholder="密码" />
+            <input name="name" placeholder="名称（可空）" />
+            <button type="submit">加入列表</button>
+          </form>
+        </section>
+
+        <main>
+          <section class="col wide">
+            <div class="row-head">
+              <div>
+                <h1 id="detail-title">点</h1>
+                <p id="selected-device">还没选设备</p>
+              </div>
+              <div class="row-actions">
+                <button type="button" id="btn-browse" disabled>浏览节点</button>
+                <button type="button" id="btn-read" disabled>刷新状态</button>
+              </div>
+            </div>
+            <div id="browse-list" class="browse" hidden></div>
+            <table class="points">
+              <thead>
+                <tr>
+                  <th>点</th>
+                  <th>读写</th>
+                  <th>地址</th>
+                  <th>当前值</th>
+                  <th>状态</th>
+                  <th>更新</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="point-body"></tbody>
+            </table>
+            <form id="point-form">
+              <h2>添加点</h2>
+              <div class="add-point">
+                <label>名称 <input name="name" required /></label>
+                <label>读写
+                  <select name="rw">
+                    <option value="rw">读写</option>
+                    <option value="r">只读</option>
+                    <option value="w">只写</option>
+                  </select>
+                </label>
+                <label>地址
+                  <textarea name="address" id="point-address" rows="3"></textarea>
+                </label>
+              </div>
+              <button type="submit" id="point-submit" disabled>添加</button>
+            </form>
+            <h2>本设备收发</h2>
+            <div id="message-list" class="log"></div>
+          </section>
+        </main>
+      </div>
+
+      <div id="page-uplink" hidden>
+        <section class="panel">
+          <h1>上层通信</h1>
+          <p class="hint">边端只出站连云。HTTP 注册走 Spring Cloud Gateway（云 API 入口）；MQTT 上报遥测；gRPC 接下发。南向设备 MQTT 请到「设备」里加。</p>
+        </section>
+        <section class="panel">
+          <h2>云 HTTP 入口</h2>
+          <p class="hint">填 Spring Cloud Gateway 地址（如 18080），不要填 asset 等微服务实例。注册路径：/api/assets/edge-gateways/register。</p>
+          <p id="cloud-status" class="hint">尚未注册</p>
+          <form id="cloud-form" class="form-grid">
+            <label>云 API 地址
+              <input name="cloudApiBase" id="cloud-api" required placeholder="http://127.0.0.1:18080" />
+            </label>
+            <div class="row-actions">
+              <button type="submit">保存</button>
+              <button type="button" id="btn-cloud-test">立即注册</button>
+            </div>
+          </form>
+        </section>
+        <section class="panel">
+          <h2>MQTT 上报</h2>
+          <p id="uplink-status" class="hint">尚未试连</p>
+          <form id="uplink-form" class="form-grid">
+            <label class="check">启用上报
+              <input name="enabled" id="uplink-enabled" type="checkbox" />
+            </label>
+            <label>Broker
+              <input name="broker" id="uplink-broker" required placeholder="tcp://127.0.0.1:1883" />
+            </label>
+            <label>Client ID
+              <input name="clientId" id="uplink-client" placeholder="linenexus-gw-local-01" />
+            </label>
+            <label>主题前缀
+              <input name="topicPrefix" id="uplink-prefix" placeholder="linenexus/gw-local-01" />
+            </label>
+            <label>QoS
+              <select name="qos" id="uplink-qos">
+                <option value="0">0 最多一次</option>
+                <option value="1">1 至少一次</option>
+                <option value="2">2 恰好一次</option>
+              </select>
+            </label>
+            <label>用户名
+              <input name="username" id="uplink-user" placeholder="可空" />
+            </label>
+            <label>密码
+              <input name="password" id="uplink-pass" type="password" placeholder="可空" />
+            </label>
+            <div class="row-actions">
+              <button type="submit">保存</button>
+              <button type="button" id="btn-uplink-test">试连 MQTT</button>
+            </div>
+          </form>
+        </section>
+        <section class="panel">
+          <h2>MQTT 收发测试</h2>
+          <p id="mqtt-io-status" class="hint">勾选「启用上报」并保存后，网关会保持连接。</p>
+          <div id="mqtt-topics" class="topic-list"></div>
+          <p class="hint">MQTTX / EMQX：订阅 telemetry 和 ack，往 command 发一条。网关这边点「发送测试」会发到 telemetry。</p>
+          <form id="mqtt-send-form" class="mqtt-send">
+            <label>发到 telemetry
+              <textarea id="mqtt-payload" rows="3">{"type":"ping","from":"linenexus-edge"}</textarea>
+            </label>
+            <div class="row-actions">
+              <button type="submit">发送测试</button>
+            </div>
+          </form>
+          <h2>本页收发</h2>
+          <div id="mqtt-io-log" class="log mqtt-log"></div>
+        </section>
+        <section class="panel">
+          <h2>gRPC 控制面</h2>
+          <p class="hint">云下发点表、写点、回执走这里。Java 云还没起来时，试连会失败，先把地址存下来。</p>
+          <p id="grpc-status" class="hint">尚未试连</p>
+          <form id="grpc-form" class="form-grid">
+            <label class="check">启用控制面
+              <input name="grpcEnabled" id="grpc-enabled" type="checkbox" />
+            </label>
+            <label>地址
+              <input name="grpcTarget" id="grpc-target" placeholder="127.0.0.1:9090" />
+            </label>
+            <label class="check">TLS
+              <input name="grpcTls" id="grpc-tls" type="checkbox" />
+            </label>
+            <label>Token
+              <input name="grpcToken" id="grpc-token" type="password" placeholder="可空" />
+            </label>
+            <div class="row-actions">
+              <button type="submit">保存</button>
+              <button type="button" id="btn-grpc-test">试连 gRPC</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <p id="toast" hidden></p>
+  <script src="/js/presets.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

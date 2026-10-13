@@ -1,0 +1,43 @@
+server:
+  port: 18080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        group: LINENEXUS_CLOUD
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: auth
+              uri: lb://asset
+              predicates:
+                - Path=/api/auth/**
+              filters:
+                - StripPrefix=1
+            - id: platform
+              uri: lb://asset
+              predicates:
+                - Path=/api/platform/**
+              filters:
+                - StripPrefix=1
+            - id: asset
+              uri: lb://asset
+              predicates:
+                - Path=/api/assets/**
+              filters:
+                - StripPrefix=2
+            - id: monitor
+              uri: lb://monitor
+              predicates:
+                - Path=/api/monitor/**
+              filters:
+                - StripPrefix=1
+
+linenexus:
+  auth:
+    jwt-secret: "linenexus-dev-jwt-secret-change-me-32b"

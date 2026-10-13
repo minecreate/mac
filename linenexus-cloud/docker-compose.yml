@@ -1,0 +1,37 @@
+# LineNexus 云侧依赖：TDengine（时序）+ Mosquitto（MQTT Broker）
+# 本机无 Docker 时，TDengine 跑在 Ubuntu 虚拟机 192.168.3.45（见 tools/_ssh_tdengine_up.py）
+# monitor 默认 jdbc:TAOS-RS://192.168.3.45:6041
+# 用法（有 Docker 的机器上）：docker compose up -d
+# MySQL / Nacos 仍使用本机已有实例（见 doc/03-数据存储.md）
+
+services:
+  tdengine:
+    image: tdengine/tdengine:3.3.2.0
+    container_name: linenexus-tdengine
+    hostname: tdengine
+    ports:
+      - "6030:6030"   # 原生协议
+      - "6041:6041"   # REST / JDBC TAOS-RS
+      - "6043:6043"
+    environment:
+      # 必须等于容器 hostname；勿填宿主机 IP（容器内会 bind 失败）
+      TAOS_FQDN: tdengine
+    volumes:
+      - tdengine-data:/var/lib/taos
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    restart: unless-stopped
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0.18
+    container_name: linenexus-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./deploy/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    restart: unless-stopped
+
+volumes:
+  tdengine-data:
